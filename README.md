@@ -6,7 +6,7 @@
 
 Turn a GitHub contribution calendar into an animated UFO scene: a flying saucer, a glowing tractor beam, and a year's worth of tiny green discoveries.
 
-[Get started](#quick-start) · [Add to your profile](#add-it-to-your-github-profile) · [Customize](#cli-reference) · [Contribute](CONTRIBUTING.md)
+[Add to your profile](#add-it-to-your-github-profile) · [Local use](#local-use-optional) · [Customize](#cli-reference) · [Contribute](CONTRIBUTING.md)
 
 <img src="assets/demo.svg" alt="A UFO flying above a GitHub contribution calendar with a lime green tractor beam" width="100%">
 
@@ -22,37 +22,17 @@ Turn a GitHub contribution calendar into an animated UFO scene: a flying saucer,
 - **A CLI and GitHub Action** for repeatable generation and profile updates.
 - **A JavaScript library** with zero runtime dependencies, deterministic demo data, and a normalized calendar API.
 
-UFO is the implemented graph type. SVG is the implemented export format. Customize it through CLI flags, GitHub Action inputs, or the JavaScript API—no website or server to host. The package is **not published to the npm registry**; install it directly from this repository.
-
-## Quick start
-
-Use **Node.js 22.12 or newer** and npm. Clone the source:
-
-```sh
-git clone https://github.com/dianbrown/commitcade.git
-cd commitcade
-npm ci
-node cli/index.js --demo --output generated/demo.svg
-```
-
-Open `generated/demo.svg` in your browser to watch the animation. The demo works without network requests. To generate your own graph:
-
-```sh
-node cli/index.js --username octocat --output generated/octocat.svg
-```
-
-To install the CLI directly from this Git repository:
-
-```sh
-npm install --global git+https://github.com/dianbrown/commitcade.git
-commitcade --demo --output demo.svg
-```
-
-You can also run `npm link` inside the checkout to make its `commitcade` command available locally. Neither approach requires an npm registry release of Commitcade.
+UFO is the implemented graph type. SVG is the implemented export format. Customize it through CLI flags, GitHub Action inputs, or the JavaScript API—no website or server to host. Profile users can use the Action below without installing anything. For local CLI/library use, install directly from this repository; the package is not published to the npm registry.
 
 ## Add it to your GitHub profile
 
-Create or open your public profile repository, **`YOUR_USERNAME/YOUR_USERNAME`**. Save the following as `.github/workflows/commitcade.yml` in that repository. The workflow checks out your profile repository, generates both color variants, and commits only those SVG files to its default branch.
+No local installation, website, server, or personal access token is needed. Your GitHub username is detected automatically. Setup is two files and one manual run; the workflow then refreshes the graph daily.
+
+**Availability:** `dianbrown/commitcade` must be public before other users can use this workflow from their public profile repositories. A private source repository is not a public Action release.
+
+### 1. Add the workflow
+
+Create or open your public profile repository, **`YOUR_USERNAME/YOUR_USERNAME`**. In GitHub, choose **Add file → Create new file**, name it `.github/workflows/commitcade.yml`, paste the workflow below, and commit it to your default branch. You can also copy [the ready-to-use workflow](examples/profile-workflow.yml). No placeholders need replacing.
 
 ```yaml
 name: Update contribution graph
@@ -80,7 +60,6 @@ jobs:
       - uses: dianbrown/commitcade@main
         with:
           github_user_name: ${{ github.repository_owner }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           output_dir: assets/commitcade
 
       - name: Commit changed graphs
@@ -98,7 +77,13 @@ jobs:
           git push origin "HEAD:$DEFAULT_BRANCH"
 ```
 
-Run **Actions → Update contribution graph → Run workflow** once, then add this to your profile `README.md`. Relative paths resolve within your profile repository:
+### 2. Run it once
+
+Open **Actions → Update contribution graph → Run workflow**, choose your default branch, and wait for a green check. The run creates the light and dark SVGs in `assets/commitcade/`. GitHub supplies the token automatically; you do not need to create a secret.
+
+### 3. Add the image to your README
+
+Paste the following into the `README.md` at the root of the same profile repository and commit it, or copy [the ready-to-use README snippet](examples/profile-readme.md). The image automatically matches the viewer's light or dark theme. The paths work unchanged for every username and default branch:
 
 ```html
 <picture>
@@ -109,6 +94,13 @@ Run **Actions → Update contribution graph → Run workflow** once, then add th
 ```
 
 The action needs no npm install step. It sets up Node 22 and runs the renderer directly. The example uses `@main` while the project is getting started; pin a reviewed commit SHA if you need an immutable action version. Repository rules must permit the workflow's bot to push. If the branch moves during generation, the push can fail; rerun the job rather than force-pushing. Schedules follow UTC and may run later than their scheduled time.
+
+### If the image does not appear
+
+- **Workflow cannot find `dianbrown/commitcade`:** the source repository must be public and your repository must allow the Action.
+- **No SVG files yet:** run the workflow manually once and check its result. Adding the README image alone does not generate files.
+- **Push is denied:** keep `permissions: contents: write` in the workflow; repository or organization rules must allow the workflow bot to push.
+- **A previous image is still visible:** GitHub caches images, so allow time after a successful update.
 
 ## Download graphs from a workflow
 
@@ -175,6 +167,32 @@ beam_size: '2'
 Only occupied squares whose centers fall inside the cone are collected. A larger beam can capture more days per stop, depending on nearby activity; it does not change contribution counts or invent activity. Each square is collected at most once per loop, and the beam stays open until the whole cluster has lifted. `speed` still adjusts the overall animation speed independently of the personality.
 
 The [manual download workflow](.github/workflows/generate-example.yml) also offers personality and beam-size choices in its Run workflow form. No website is needed.
+
+## Local use (optional)
+
+Use **Node.js 22.12 or newer** and npm. Clone the source:
+
+```sh
+git clone https://github.com/dianbrown/commitcade.git
+cd commitcade
+npm ci
+node cli/index.js --demo --output generated/demo.svg
+```
+
+Open `generated/demo.svg` in your browser to watch the animation. The demo works without network requests. To generate your own graph:
+
+```sh
+node cli/index.js --username octocat --output generated/octocat.svg
+```
+
+To install the CLI directly from this Git repository:
+
+```sh
+npm install --global git+https://github.com/dianbrown/commitcade.git
+commitcade --demo --output demo.svg
+```
+
+You can also run `npm link` inside the checkout to make its `commitcade` command available locally. Neither approach requires an npm registry release of Commitcade.
 
 ## CLI reference
 
