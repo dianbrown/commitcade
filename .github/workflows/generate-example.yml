@@ -1,0 +1,26 @@
+name: Download contribution graphs
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: GitHub username (leave blank to use the repository owner)
+        type: string
+        required: false
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        id: graphs
+        with:
+          github_user_name: ${{ inputs.username || github.repository_owner }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          output_dir: generated
+      - uses: actions/upload-artifact@v4
+        with:
+          name: commitcade-graphs
+          path: ${{ steps.graphs.outputs.output_dir }}/*.svg
+          if-no-files-found: error

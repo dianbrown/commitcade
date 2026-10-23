@@ -1,0 +1,62 @@
+name: Commitcade contribution graph
+description: Generate animated, self-contained SVG contribution graphs for a GitHub profile.
+author: Commitcade contributors
+branding:
+  icon: activity
+  color: green
+inputs:
+  github_user_name:
+    description: GitHub username whose contribution calendar should be rendered.
+    required: true
+  github_token:
+    description: GitHub token for the official GraphQL API. Set to an empty string to use public third-party data.
+    required: false
+    default: ${{ github.token }}
+  types:
+    description: Comma-separated graph types. Currently ufo is supported.
+    required: false
+    default: ufo
+  beam_color:
+    description: Six-digit hex beam color, including the leading hash.
+    required: false
+    default: '#a3ff12'
+  speed:
+    description: Animation speed multiplier from 0.1 to 5.
+    required: false
+    default: '1'
+  show_labels:
+    description: Show calendar labels (true or false).
+    required: false
+    default: 'true'
+  show_stars:
+    description: Show background stars (true or false).
+    required: false
+    default: 'true'
+  output_dir:
+    description: Output subdirectory relative to the caller's repository workspace.
+    required: false
+    default: dist
+outputs:
+  output_dir:
+    description: Relative directory containing the generated SVG files.
+    value: ${{ steps.generate.outputs.output_dir }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    - name: Generate contribution graphs
+      id: generate
+      shell: bash
+      env:
+        COMMITCADE_ACTION_PATH: ${{ github.action_path }}
+        INPUT_GITHUB_USER_NAME: ${{ inputs.github_user_name }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+        INPUT_TYPES: ${{ inputs.types }}
+        INPUT_BEAM_COLOR: ${{ inputs.beam_color }}
+        INPUT_SPEED: ${{ inputs.speed }}
+        INPUT_SHOW_LABELS: ${{ inputs.show_labels }}
+        INPUT_SHOW_STARS: ${{ inputs.show_stars }}
+        INPUT_OUTPUT_DIR: ${{ inputs.output_dir }}
+      run: node "$COMMITCADE_ACTION_PATH/action/index.js"

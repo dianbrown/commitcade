@@ -1,0 +1,265 @@
+<div align="center">
+
+# Commitcade
+
+**Your commits. A close encounter.**
+
+Turn a GitHub contribution calendar into an animated UFO scene: a flying saucer, a glowing tractor beam, and a year's worth of tiny green discoveries.
+
+[Get started](#quick-start) · [Add to your profile](#add-it-to-your-github-profile) · [Customize](#cli-reference) · [Contribute](CONTRIBUTING.md)
+
+<img src="assets/demo.svg" alt="A UFO flying above a GitHub contribution calendar with a lime green tractor beam" width="100%">
+
+*Deterministic sample data. Generate your own SVG with a username or try the offline demo.*
+
+</div>
+
+## What you get
+
+- **An animated UFO contribution graph** exported as a self-contained SVG.
+- **Three themes:** GitHub Dark, GitHub Light, and Midnight, with a custom beam color, animation speed, labels, and stars.
+- **A CLI and GitHub Action** for repeatable generation and profile updates.
+- **A JavaScript library** with zero runtime dependencies, deterministic demo data, and a normalized calendar API.
+
+UFO is the implemented graph type. SVG is the implemented export format. Customize it through CLI flags, GitHub Action inputs, or the JavaScript API—no website or server to host. The package is **not published to the npm registry**; install it directly from this repository.
+
+## Quick start
+
+Use **Node.js 22.12 or newer** and npm. Clone the source:
+
+```sh
+git clone https://github.com/dianbrown/commitcade.git
+cd commitcade
+npm ci
+node cli/index.js --demo --output generated/demo.svg
+```
+
+Open `generated/demo.svg` in your browser to watch the animation. The demo works without network requests. To generate your own graph:
+
+```sh
+node cli/index.js --username octocat --output generated/octocat.svg
+```
+
+To install the CLI directly from this Git repository:
+
+```sh
+npm install --global git+https://github.com/dianbrown/commitcade.git
+commitcade --demo --output demo.svg
+```
+
+You can also run `npm link` inside the checkout to make its `commitcade` command available locally. Neither approach requires an npm registry release of Commitcade.
+
+## Add it to your GitHub profile
+
+Create or open your public profile repository, **`YOUR_USERNAME/YOUR_USERNAME`**. Save the following as `.github/workflows/commitcade.yml` in that repository. The workflow checks out your profile repository, generates both color variants, and commits only those SVG files to its default branch.
+
+```yaml
+name: Update contribution graph
+
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: commitcade-profile
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - uses: dianbrown/commitcade@main
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          output_dir: assets/commitcade
+
+      - name: Commit changed graphs
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg
+          if git diff --cached --quiet -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg; then
+            echo 'Contribution graphs are unchanged.'
+            exit 0
+          fi
+          git commit -m 'Update Commitcade contribution graphs' -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg
+          git push origin "HEAD:$DEFAULT_BRANCH"
+```
+
+Run **Actions → Update contribution graph → Run workflow** once, then add this to your profile `README.md`. Relative paths resolve within your profile repository:
+
+```html
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/commitcade/ufo-contribution-graph-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/commitcade/ufo-contribution-graph.svg">
+  <img alt="My GitHub contributions explored by a UFO" src="assets/commitcade/ufo-contribution-graph.svg">
+</picture>
+```
+
+The action needs no npm install step. It sets up Node 22 and runs the renderer directly. The example uses `@main` while the project is getting started; pin a reviewed commit SHA if you need an immutable action version. Repository rules must permit the workflow's bot to push. If the branch moves during generation, the push can fail; rerun the job rather than force-pushing. Schedules follow UTC and may run later than their scheduled time.
+
+## Download graphs from a workflow
+
+To generate files without writing a commit, use an artifact:
+
+```yaml
+name: Download contribution graphs
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dianbrown/commitcade@main
+        id: graphs
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          output_dir: generated
+      - uses: actions/upload-artifact@v4
+        with:
+          name: commitcade-graphs
+          path: ${{ steps.graphs.outputs.output_dir }}/*.svg
+          if-no-files-found: error
+```
+
+After the run succeeds, download **commitcade-graphs** from its Actions summary. This repository also includes a runnable [download example](.github/workflows/generate-example.yml) that uses the checked-out local action.
+
+## Action inputs
+
+| Input | Default | Purpose |
+| --- | --- | --- |
+| `github_user_name` | Required | GitHub username to render |
+| `github_token` | `${{ github.token }}` | Token for GitHub's official GraphQL API; set `''` to use the public third-party API |
+| `types` | `ufo` | Comma-separated graph type IDs; currently only `ufo` |
+| `beam_color` | `'#a3ff12'` | Six-digit hex color; quote it in YAML |
+| `speed` | `'1'` | Animation speed multiplier, from `0.1` to `5` |
+| `show_labels` | `'true'` | `'true'` or `'false'` |
+| `show_stars` | `'true'` | `'true'` or `'false'` |
+| `output_dir` | `dist` | Subdirectory inside the caller's repository workspace |
+
+Output **`output_dir`** is the relative directory containing the files. For `ufo`, the action writes `ufo-contribution-graph.svg` with `github-light` and `ufo-contribution-graph-dark.svg` with `github-dark`. Existing files with these names are replaced; unrelated files are left alone. The action fetches one calendar and uses it for both variants. Use the CLI for Midnight or static SVGs.
+
+## CLI reference
+
+```sh
+commitcade --username octocat --theme midnight --beam-color '#80ffdb' --speed 1.5 --output generated/octocat.svg
+commitcade --demo --theme github-light --no-stars --no-labels --static --output generated/static.svg
+commitcade --help
+```
+
+In a source checkout, replace `commitcade` with `node cli/index.js`.
+
+| Flag | Default | Purpose |
+| --- | --- | --- |
+| `--username NAME` | — | Fetch a GitHub user's contribution calendar |
+| `--demo` | Off | Use deterministic sample data; cannot be combined with `--username` |
+| `--type TYPE` | `ufo` | Graph type ID |
+| `--theme THEME` | `github-dark` | `github-dark`, `github-light`, or `midnight` |
+| `--beam-color HEX` | `#a3ff12` | Six-digit hex beam color |
+| `--speed NUMBER` | `1` | Animation speed multiplier, `0.1`–`5` |
+| `--output PATH` | `dist/ufo-contribution-graph.svg` | SVG file; parent directories are created |
+| `--no-labels` | Off | Hide calendar labels |
+| `--no-stars` | Off | Hide background stars |
+| `--static` | Off | Disable animation |
+| `--help`, `-h` | — | Print usage |
+
+The CLI replaces the chosen output file, exits with status `1` on failure, and times out contribution requests after 30 seconds. Configure **`GITHUB_TOKEN` in your environment** to use the official API. There is intentionally no token command-line flag. Without a token, it uses the public data provider; an invalid configured token produces an error rather than silently changing providers.
+
+## JavaScript API
+
+Install the repository in your project:
+
+```sh
+npm install git+https://github.com/dianbrown/commitcade.git
+```
+
+```js
+import { writeFile } from 'node:fs/promises';
+import { createDemoCalendar, fetchGitHubCalendar, renderGraph, themes, graphTypes } from 'commitcade';
+
+const calendar = createDemoCalendar(42);
+// Or, in Node.js:
+// const calendar = await fetchGitHubCalendar('octocat', {
+//   token: process.env.GITHUB_TOKEN,
+//   signal: AbortSignal.timeout(30_000),
+// });
+
+const svg = renderGraph(calendar, {
+  type: 'ufo',
+  theme: 'github-dark',
+  beamColor: '#a3ff12',
+  speed: 1,
+  showLabels: true,
+  showStars: true,
+  animation: true,
+});
+await writeFile('contributions.svg', svg);
+
+console.log(Object.keys(themes));
+console.log(graphTypes); // [{ id, name, description }]
+```
+
+The package entry point is `src/core/index.js`. `renderGraph(calendar, options)` synchronously returns an SVG string. `createDemoCalendar(seed = 42)` returns repeatable sample data. `fetchGitHubCalendar(username, { token, signal, fetchImpl } = {})` asynchronously returns a normalized calendar; `fetchImpl` lets tests inject a fetch implementation. The normalized shape is:
+
+```js
+{
+  username: 'octocat',
+  totalContributions: 3,
+  weeks: [{
+    contributionDays: [{
+      date: '2026-01-04',
+      contributionCount: 3,
+      contributionLevel: 1, // integer 0–4
+      weekday: 0,          // Sunday = 0, Saturday = 6
+    }],
+  }],
+}
+```
+
+Pass `animation: false` for a static graph. The renderer's type registry lives in `src/core/registry.js`; see [Contributing](CONTRIBUTING.md#add-a-graph-type) for adding a renderer and registering its metadata. The registry is a source extension point, not a promise of additional installed graph types.
+
+## Data, privacy, and browser support
+
+### The UFO encounter
+
+The compact saucer wanders around the calendar on curved flights, banking into turns and gently rocking as it hovers. It approaches with its beam retracted, settles over a target, and opens a green cone. Occupied squares inside the cone rise into the ship together, then the beam retracts before the next flight. Nearby discoveries are mixed with occasional longer excursions; collection follows the beam's footprint.
+
+Each loop visits a selection of contribution clusters and gently restores collected squares before repeating. The route is seeded from the calendar, so it looks random while identical input produces identical SVGs. Empty calendars get a quiet patrol without invented contributions. Reduced-motion preferences and static exports preserve the complete calendar.
+
+### Contribution sources
+
+Demo data stays local. Without a token, contribution lookups use **[github-contributions-api.jogruber.de](https://github-contributions-api.jogruber.de/)**, a third-party public contribution service. That provider receives the username and ordinary request metadata, including the requesting machine's IP address. Availability, caching, and rate limits are controlled by the provider.
+
+The CLI and action can send a token directly to `https://api.github.com/graphql` for GitHub's official contribution calendar. Token-bearing requests are not sent to the third-party provider. Use environment variables or GitHub Actions secrets. Visible contribution totals depend on the account's contribution visibility and the data provider; this tool does not bypass privacy settings.
+
+SVG files contain the rendered calendar and do not fetch data themselves. Modern browsers support the animation; image viewers and platforms may render only a still frame. Use `--static` when motion is unwanted. Embedding the SVG as an image does not require JavaScript on the page.
+
+## Development
+
+```sh
+npm ci           # Install from the lockfile (no dependencies required)
+npm test         # Node test suite
+npm run check    # Same validation used by CI
+npm run demo     # Regenerate assets/demo.svg
+```
+
+CLI tests run against demo data with network access disabled. Core rendering and data-provider tests use local fixtures. Changes are checked by the [CI workflow](.github/workflows/ci.yml). Read [CONTRIBUTING.md](CONTRIBUTING.md) before adding a graph type or changing the public API.
+
+## Credits and license
+
+Inspired by the playful profile animations in [abozanona/pacman-contribution-graph](https://github.com/abozanona/pacman-contribution-graph). Commitcade is an original implementation; no code from that project was copied.
+
+[MIT](LICENSE) · Copyright © 2026 Commitcade contributors.
