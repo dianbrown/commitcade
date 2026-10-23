@@ -6,7 +6,7 @@ const number = (value) => Number(value.toFixed(5));
 
 /** Compile continuous curved flights and geometric beam captures into standalone SVG/CSS. */
 export function renderUfo(calendar, options, theme) {
-  const scene = createUfoScene(calendar);
+  const scene = createUfoScene(calendar, options);
   const { columns, left, pitch, size, duration, visits } = scene;
   const id = svgId(JSON.stringify([calendar, options]));
   const scope = `#${id}`;
@@ -71,7 +71,9 @@ export function renderUfo(calendar, options, theme) {
   if (options.animation) for (const [index, visit] of visits.entries()) {
     const { beamOpen, beamFull, liftStart, liftEnd, beamClose, beamOff } = visit;
     const height = number(visit.beam.bottom - visit.shipY);
-    const shape = `M -3 6 L -27 ${height} L 27 ${height} L 3 6 Z`;
+    const halfWidth = number(visit.beam.bottomHalfWidth);
+    const coreWidth = number(halfWidth * 12 / 27);
+    const shape = `M -3 6 L -${halfWidth} ${height} L ${halfWidth} ${height} L 3 6 Z`;
     animations.push(`${scope} .beam-${index}{animation:${id}-beam-${index} ${seconds} linear infinite}
       ${scope} .spark-${index}{animation:${id}-spark-${index} ${seconds} linear infinite}
       @keyframes ${id}-beam-${index}{
@@ -87,9 +89,9 @@ export function renderUfo(calendar, options, theme) {
     beams.push(`<g transform="translate(${number(visit.shipX)} ${number(visit.shipY)})"><g class="beam-window beam-${index}" data-target="${visit.date}">
       <path d="${shape}" fill="${options.beamColor}" opacity=".28" filter="url(#${id}-soft)"/>
       <path d="${shape}" fill="url(#${id}-beam)" stroke="${options.beamColor}" stroke-width=".35" stroke-opacity=".3"/>
-      <path d="M -1.5 6 L -12 ${height} L 12 ${height} L 1.5 6 Z" fill="${options.beamColor}" opacity=".09"/>
-      <ellipse cx="0" cy="${height}" rx="27" ry="3.5" fill="url(#${id}-halo)"/>
-      <g class="beam-particles spark-${index}" fill="${options.beamColor}"><circle cx="-8" cy="${number(height * 0.8)}" r=".8"/><circle cx="7" cy="${number(height * 0.65)}" r=".65"/><circle cx="1" cy="${number(height * 0.94)}" r="1"/></g>
+      <path d="M -1.5 6 L -${coreWidth} ${height} L ${coreWidth} ${height} L 1.5 6 Z" fill="${options.beamColor}" opacity=".09"/>
+      <ellipse cx="0" cy="${height}" rx="${halfWidth}" ry="3.5" fill="url(#${id}-halo)"/>
+      <g class="beam-particles spark-${index}" fill="${options.beamColor}"><circle cx="${number(-halfWidth * 8 / 27)}" cy="${number(height * 0.8)}" r=".8"/><circle cx="${number(halfWidth * 7 / 27)}" cy="${number(height * 0.65)}" r=".65"/><circle cx="1" cy="${number(height * 0.94)}" r="1"/></g>
     </g></g>`);
   }
 

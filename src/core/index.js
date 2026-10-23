@@ -1,20 +1,23 @@
 import { normalizeCalendar } from './calendar.js';
 import { themes } from './themes.js';
 import { typeRegistry } from './registry.js';
+import { resolveUfoOptions } from './types/ufo-options.js';
 
 export { createDemoCalendar } from './calendar.js';
 export { fetchGitHubCalendar, validateUsername } from './github.js';
 export { graphTypes } from './registry.js';
 export { themes } from './themes.js';
+export { flightModes } from './types/ufo-options.js';
 
 const defaults = Object.freeze({ type: 'ufo', theme: 'github-dark', beamColor: '#a3ff12', speed: 1,
-  showLabels: true, showStars: true, animation: true });
+  showLabels: true, showStars: true, animation: true, flightMode: 'classic', beamSize: 1 });
 
 /** Render a dependency-free, responsive SVG. Options never interpolate arbitrary CSS. */
 export function renderGraph(calendar, options = {}) {
   if (!options || typeof options !== 'object' || Array.isArray(options)) throw new TypeError('Options must be an object.');
   const settings = { ...defaults };
   for (const key of Object.keys(defaults)) if (options[key] !== undefined) settings[key] = options[key];
+  resolveUfoOptions(settings);
   if (typeof settings.type !== 'string' || !Object.hasOwn(typeRegistry, settings.type)) throw new TypeError('Unknown graph type.');
   if (typeof settings.theme !== 'string' || !Object.hasOwn(themes, settings.theme)) throw new TypeError('Unknown graph theme.');
   if (typeof settings.beamColor !== 'string' || !/^#[\da-f]{6}$/i.test(settings.beamColor)) {

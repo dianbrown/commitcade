@@ -12,6 +12,8 @@ async function main() {
     type,
     theme,
     beamColor: process.env.INPUT_BEAM_COLOR || '#a3ff12',
+    beamSize: process.env.INPUT_BEAM_SIZE ?? '1',
+    flightMode: process.env.INPUT_FLIGHT_MODE ?? 'classic',
     speed: process.env.INPUT_SPEED || '1',
     showLabels: parseBoolean(process.env.INPUT_SHOW_LABELS, 'show_labels'),
     showStars: parseBoolean(process.env.INPUT_SHOW_STARS, 'show_stars'),

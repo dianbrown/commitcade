@@ -36,6 +36,8 @@ test('CLI help describes available options without fetching or writing files', a
   assert.match(result.stdout, /--username/);
   assert.match(result.stdout, /--demo/);
   assert.match(result.stdout, /GITHUB_TOKEN/);
+  assert.match(result.stdout, /--beam-size/);
+  assert.match(result.stdout, /--flight-mode/);
   assert.deepEqual(await readdir(cwd), []);
 });
 
@@ -74,6 +76,12 @@ test('CLI rejects invalid arguments before writing any output', async (t) => {
     [['--demo', '--type', 'missing'], /graph type/i],
     [['--demo', '--theme', 'missing'], /theme/i],
     [['--demo', '--beam-color', 'red'], /hex color/i],
+    [['--demo', '--flight-mode', 'unknown'], /flight mode/i],
+    [['--demo', '--flight-mode', ''], /flight mode/i],
+    [['--demo', '--beam-size', ''], /beam size/i],
+    [['--demo', '--beam-size', '0.49'], /beam size/i],
+    [['--demo', '--beam-size', '3.1'], /beam size/i],
+    [['--demo', '--beam-size', 'Infinity'], /beam size/i],
     [['--demo', '--speed', '0'], /speed/i],
     [['--demo', '--speed', '0.01'], /speed/i],
     [['--demo', '--speed', '6'], /speed/i],
@@ -98,6 +106,16 @@ test('CLI rejects invalid arguments before writing any output', async (t) => {
   }
 });
 
+test('CLI exports the requested animated personality and beam size', async (t) => {
+  const cwd = await temporaryDirectory(t);
+  for (const flightMode of ['curious', 'collector']) {
+    const result = run(['--demo', '--flight-mode', flightMode, '--beam-size', '2.5', '--output', `${flightMode}.svg`], cwd);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(await readFile(join(cwd, `${flightMode}.svg`), 'utf8'),
+      renderGraph(createDemoCalendar(), { flightMode, beamSize: 2.5 }));
+  }
+});
+
 function runAction(cwd, input = {}, preload = noNetwork) {
   return spawnSync(process.execPath, ['--import', preload, action], {
     cwd,
@@ -108,6 +126,7 @@ function runAction(cwd, input = {}, preload = noNetwork) {
       NODE_OPTIONS: '', GITHUB_TOKEN: '', INPUT_GITHUB_TOKEN: '',
       INPUT_GITHUB_USER_NAME: 'octocat', INPUT_TYPES: 'ufo',
       INPUT_BEAM_COLOR: '#a3ff12', INPUT_SPEED: '1',
+      INPUT_BEAM_SIZE: '1', INPUT_FLIGHT_MODE: 'classic',
       INPUT_SHOW_LABELS: 'true', INPUT_SHOW_STARS: 'true',
       INPUT_OUTPUT_DIR: 'dist', GITHUB_WORKSPACE: cwd,
       GITHUB_OUTPUT: join(cwd, 'github-output'),
@@ -131,6 +150,7 @@ test('action generates both themes and its output with a mocked public request',
   `);
   // An explicitly empty action input must override an ambient workflow token.
   const result = runAction(cwd, { INPUT_OUTPUT_DIR: 'assets/graphs', INPUT_TYPES: 'ufo, ufo',
+    INPUT_BEAM_SIZE: '2', INPUT_FLIGHT_MODE: 'curious',
     INPUT_GITHUB_TOKEN: '', GITHUB_TOKEN: 'ambient-token-must-not-be-used' }, preload);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual((await readdir(join(cwd, 'assets', 'graphs'))).sort(), ['ufo-contribution-graph-dark.svg', 'ufo-contribution-graph.svg']);
@@ -141,6 +161,11 @@ test('action generates both themes and its output with a mocked public request',
   assert.ok(light.includes(themes['github-light'].background));
   assert.ok(dark.includes(themes['github-dark'].background));
   assert.notEqual(light, dark);
+  const calendar = { username: 'octocat', totalContributions: 3,
+    weeks: [{ contributionDays: [{ date: '2026-01-04', contributionCount: 3, contributionLevel: 1, weekday: 0 }] }] };
+  for (const [svg, theme] of [[light, 'github-light'], [dark, 'github-dark']]) {
+    assert.equal(svg, renderGraph(calendar, { theme, beamSize: 2, flightMode: 'curious' }));
+  }
   assert.equal(await readFile(join(cwd, 'github-output'), 'utf8'), 'output_dir=assets/graphs\n');
 });
 
@@ -171,6 +196,10 @@ test('action rejects invalid inputs before any request or file write', async (t)
     [{ INPUT_SHOW_LABELS: 'yes' }, /true.*false/],
     [{ INPUT_TYPES: 'missing' }, /graph type/],
     [{ INPUT_SPEED: '6' }, /speed/i],
+    [{ INPUT_BEAM_SIZE: '0' }, /beam size/i],
+    [{ INPUT_BEAM_SIZE: '4' }, /beam size/i],
+    [{ INPUT_BEAM_SIZE: '' }, /beam size/i],
+    [{ INPUT_FLIGHT_MODE: 'unknown' }, /flight mode/i],
   ];
   for (const [inputs, message] of cases) {
     await t.test(JSON.stringify(inputs), async (t) => {

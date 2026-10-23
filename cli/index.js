@@ -17,6 +17,8 @@ Options:
   --type TYPE        Graph type: ${graphTypes.map(({ id }) => id).join(', ')} (default: ufo)
   --theme THEME      ${Object.keys(themes).join(', ')} (default: github-dark)
   --beam-color HEX   Six-digit hex color (default: #a3ff12)
+  --beam-size NUMBER Beam size multiplier, 0.5–3 (default: 1)
+  --flight-mode MODE classic, curious, or collector (default: classic)
   --speed NUMBER     Animation speed multiplier, 0.1–5 (default: 1)
   --output PATH      SVG file (default: dist/ufo-contribution-graph.svg)
   --no-labels        Hide calendar labels
@@ -39,6 +41,8 @@ async function main() {
       type: { type: 'string' },
       theme: { type: 'string' },
       'beam-color': { type: 'string' },
+      'beam-size': { type: 'string' },
+      'flight-mode': { type: 'string' },
       speed: { type: 'string' },
       output: { type: 'string', default: 'dist/ufo-contribution-graph.svg' },
       'no-labels': { type: 'boolean', default: false },
@@ -59,6 +63,8 @@ async function main() {
     type: values.type,
     theme: values.theme,
     beamColor: values['beam-color'],
+    beamSize: values['beam-size'],
+    flightMode: values['flight-mode'],
     speed: values.speed,
     showLabels: !values['no-labels'],
     showStars: !values['no-stars'],

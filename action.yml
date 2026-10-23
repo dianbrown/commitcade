@@ -24,6 +24,14 @@ inputs:
     description: Animation speed multiplier from 0.1 to 5.
     required: false
     default: '1'
+  flight_mode:
+    description: UFO personality (classic, curious, or collector).
+    required: false
+    default: classic
+  beam_size:
+    description: Beam size multiplier from 0.5 to 3; larger cones collect more occupied squares per stop.
+    required: false
+    default: '1'
   show_labels:
     description: Show calendar labels (true or false).
     required: false
@@ -55,6 +63,8 @@ runs:
         INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
         INPUT_TYPES: ${{ inputs.types }}
         INPUT_BEAM_COLOR: ${{ inputs.beam_color }}
+        INPUT_BEAM_SIZE: ${{ inputs.beam_size }}
+        INPUT_FLIGHT_MODE: ${{ inputs.flight_mode }}
         INPUT_SPEED: ${{ inputs.speed }}
         INPUT_SHOW_LABELS: ${{ inputs.show_labels }}
         INPUT_SHOW_STARS: ${{ inputs.show_stars }}

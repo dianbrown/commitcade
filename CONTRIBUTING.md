@@ -21,7 +21,7 @@ The public `graphTypes` export from `src/core/index.js` is the type registry. Ea
 
 1. Implement a renderer for the normalized calendar and shared options. Produce a complete, self-contained SVG string with no scripts or external resources.
 2. Add its metadata to the registry and connect it to `renderGraph(calendar, options)` dispatch. The registry is source code, not a runtime plugin installation system.
-3. Support the shared themes, beam color, speed, labels, stars, and static rendering where applicable. Escape any user-controlled text inserted into SVG.
+3. Support the shared themes, beam color and size, flight personality, speed, labels, stars, and static rendering where applicable. Escape any user-controlled text inserted into SVG.
 4. Add deterministic rendering tests, including empty calendars, invalid inputs, and static output. Expose any new options through the CLI, action, and JavaScript API as appropriate.
 5. Update README examples and action input descriptions. CLI validation and help read the registry; the action produces `<type>-contribution-graph.svg` and `<type>-contribution-graph-dark.svg` for each selected type.
 

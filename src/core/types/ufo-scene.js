@@ -1,3 +1,5 @@
+import { resolveUfoOptions } from './ufo-options.js';
+
 function seededRandom(calendar) {
   let seed = 2166136261;
   for (const character of JSON.stringify(calendar)) seed = Math.imul(seed ^ character.charCodeAt(0), 16777619);
@@ -30,7 +32,11 @@ export function insideBeam(cell, beam) {
 /** Deterministic geometry and timing plan. Times are seconds before the speed multiplier.
  * CSS samples an eased curve at roughly 90ms intervals; each square is captured once.
  */
-export function createUfoScene(calendar) {
+export function createUfoScene(calendar, options = {}) {
+  const { flightMode, beamSize } = resolveUfoOptions(options);
+  const curious = flightMode === 'curious';
+  const localRadius = curious ? 72 : 144;
+  const cruiseSpeed = curious ? 72 : 100;
   const random = seededRandom(calendar);
   const pitch = 18;
   const size = 13;
@@ -46,20 +52,40 @@ export function createUfoScene(calendar) {
     let pool = remaining;
     if (previous) {
       const local = remaining.filter((cell) => Math.abs(cell.x - previous.x) >= 18
-        && Math.abs(cell.x - previous.x) <= 144 && cell.row !== previous.row);
-      const distant = remaining.filter((cell) => Math.abs(cell.x - previous.x) > 144
-        && Math.abs(cell.x - previous.x) < 360);
-      if (targets.length % 7 === 0 && distant.length) pool = distant;
+        && Math.abs(cell.x - previous.x) <= localRadius && cell.row !== previous.row);
+      const distant = remaining.filter((cell) => Math.abs(cell.x - previous.x) > localRadius
+        && Math.abs(cell.x - previous.x) < (curious ? 216 : 360));
+      if (targets.length % (curious ? 10 : 7) === 0 && distant.length) pool = distant;
       else if (local.length) pool = local;
       else {
         const alternatives = remaining.filter((cell) => cell.column !== previous.column);
         if (alternatives.length) pool = alternatives;
       }
     }
-    const target = pool[Math.floor(random() * pool.length)];
-    const height = 44 + random() * 14;
-    const beam = { x: target.x, top: target.y - height + 6, bottom: target.y + 7,
-      topHalfWidth: 3, bottomHalfWidth: 27 };
+    let target = pool[Math.floor(random() * pool.length)];
+    const baseHeight = 44 + random() * 14;
+    // Grow width linearly and reach more gently, keeping the saucer inside the SVG.
+    const geometryFor = (cell) => {
+      const height = Math.min(baseHeight * Math.sqrt(beamSize), cell.y - 40);
+      return { height, beam: { x: cell.x, top: cell.y - height + 6, bottom: cell.y + 7,
+        topHalfWidth: 3, bottomHalfWidth: 27 * beamSize } };
+    };
+    if (flightMode === 'collector') {
+      let bestCount = -1;
+      let bestDistance = Infinity;
+      const origin = previous ?? target;
+      for (const candidate of remaining) {
+        const { beam } = geometryFor(candidate);
+        const count = remaining.reduce((sum, cell) => sum + Number(insideBeam(cell, beam)), 0);
+        const distance = Math.hypot(candidate.x - origin.x, candidate.y - origin.y);
+        if (count > bestCount || (count === bestCount && distance < bestDistance)) {
+          target = candidate;
+          bestCount = count;
+          bestDistance = distance;
+        }
+      }
+    }
+    const { height, beam } = geometryFor(target);
     const captures = remaining.filter((cell) => insideBeam(cell, beam))
       .sort((a, b) => a.y - b.y || Math.abs(a.x - target.x) - Math.abs(b.x - target.x));
     for (const cell of captures) remaining.splice(remaining.indexOf(cell), 1);
@@ -69,7 +95,13 @@ export function createUfoScene(calendar) {
     ? { x: Math.max(left, targets[0].x - 45), y: Math.max(53, targets[0].y - targets[0].height - 17) }
     : { x: 560, y: 78 };
   const parked = { x: targets[0]?.x ?? 560, y: 70 };
-  const stops = targets.map((target) => ({ target, x: target.x, y: target.y - target.height }));
+  const stops = targets.flatMap((target, index) => {
+    const stop = { target, x: target.x, y: target.y - target.height };
+    if (!curious || index % 3 !== 2) return [stop];
+    return [{ target: null, inspect: true,
+      x: Math.max(left + 20, Math.min(1120 - left - 20, stop.x + (random() < 0.5 ? -24 : 24))),
+      y: Math.max(40, stop.y - 12) }, stop];
+  });
   // Empty and sparse calendars still patrol, without fabricating active squares.
   while (stops.length < 5) {
     const previous = stops.at(-1) ?? home;
@@ -81,6 +113,7 @@ export function createUfoScene(calendar) {
   const flight = [{ time: 0, ...home, tilt: 0 }, { time, ...home, tilt: 0 }];
   const visits = [];
   const legs = [];
+  const inspections = [];
   const travelTo = (point) => {
     const dx = point.x - previous.x;
     const arc = Math.min(12 + random() * 25, Math.min(previous.y, point.y) - 38);
@@ -95,7 +128,7 @@ export function createUfoScene(calendar) {
     }
     // Quintic easing has a peak derivative of 1.875. Allow curvature headroom so
     // cruise stays below about 100px/s without braking at intermediate samples.
-    const duration = Math.max(1.8, length * 2.1 / 100 + 0.5);
+    const duration = Math.max(curious ? 2.2 : 1.8, length * 2.1 / cruiseSpeed + 0.5);
     const steps = Math.ceil(duration / 0.09);
     const frames = [];
     let distanceIndex = 1;
@@ -126,7 +159,7 @@ export function createUfoScene(calendar) {
     travelTo(stop);
     const arrival = time;
     if (stop.target) {
-      const beamOpen = arrival + 0.3;
+      const beamOpen = arrival + (curious ? 0.7 : flightMode === 'collector' ? 0.2 : 0.3);
       const beamFull = beamOpen + 0.35;
       const captures = stop.target.captures.map((cell, index) => {
         const liftStart = beamFull + 0.25 + index * 0.12;
@@ -139,6 +172,12 @@ export function createUfoScene(calendar) {
       time = beamOff + 0.25;
       visits.push({ ...stop.target, shipX: stop.x, shipY: stop.y, departure, arrival,
         captures, beamOpen, beamFull, liftStart, liftEnd, beamClose, beamOff, leave: time });
+    } else if (stop.inspect) {
+      const hold = 1 + random() * 0.5;
+      flight.push({ time: time + hold * 0.3, x: stop.x, y: stop.y, tilt: -6 },
+        { time: time + hold * 0.7, x: stop.x, y: stop.y, tilt: 6 });
+      time += hold;
+      inspections.push({ start: arrival, end: time, x: stop.x, y: stop.y });
     } else time += 0.35 + random() * 0.5;
     flight.push({ time, x: stop.x, y: stop.y, tilt: 0 });
   }
@@ -146,6 +185,6 @@ export function createUfoScene(calendar) {
   travelTo(home);
   const duration = time + 0.65;
   flight.push({ time: duration, ...home, tilt: 0 });
-  return { columns, left, pitch, size, home, parked, flight, legs, visits,
+  return { columns, left, pitch, size, home, parked, flight, legs, visits, inspections,
     duration, resetStart, resetEnd: duration - 0.1 };
 }

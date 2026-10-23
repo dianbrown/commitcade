@@ -1,10 +1,12 @@
 import { graphTypes, themes } from '../src/core/index.js';
+import { resolveUfoOptions } from '../src/core/types/ufo-options.js';
 
 export function validateOptions(values = {}) {
   const type = values.type ?? 'ufo';
   const theme = values.theme ?? 'github-dark';
   const beamColor = values.beamColor ?? '#a3ff12';
   const speed = Number(values.speed ?? 1);
+  const ufoOptions = resolveUfoOptions({ flightMode: values.flightMode, beamSize: Number(values.beamSize ?? 1) });
   if (!graphTypes.some((entry) => entry.id === type)) {
     throw new Error(`Unknown graph type "${type}". Choose: ${graphTypes.map((entry) => entry.id).join(', ')}.`);
   }
@@ -18,7 +20,7 @@ export function validateOptions(values = {}) {
     throw new Error('Speed must be a finite number between 0.1 and 5.');
   }
   return {
-    type, theme, beamColor, speed,
+    type, theme, beamColor, speed, ...ufoOptions,
     showLabels: values.showLabels ?? true,
     showStars: values.showStars ?? true,
     animation: values.animation ?? true,

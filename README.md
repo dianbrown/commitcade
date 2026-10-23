@@ -18,6 +18,7 @@ Turn a GitHub contribution calendar into an animated UFO scene: a flying saucer,
 
 - **An animated UFO contribution graph** exported as a self-contained SVG.
 - **Three themes:** GitHub Dark, GitHub Light, and Midnight, with a custom beam color, animation speed, labels, and stars.
+- **Three UFO personalities:** Classic, Curious, and Collector, with an adjustable beam size.
 - **A CLI and GitHub Action** for repeatable generation and profile updates.
 - **A JavaScript library** with zero runtime dependencies, deterministic demo data, and a normalized calendar API.
 
@@ -145,6 +146,8 @@ After the run succeeds, download **commitcade-graphs** from its Actions summary.
 | `github_token` | `${{ github.token }}` | Token for GitHub's official GraphQL API; set `''` to use the public third-party API |
 | `types` | `ufo` | Comma-separated graph type IDs; currently only `ufo` |
 | `beam_color` | `'#a3ff12'` | Six-digit hex color; quote it in YAML |
+| `beam_size` | `'1'` | Beam size multiplier, from `0.5` to `3` |
+| `flight_mode` | `classic` | `classic`, `curious`, or `collector` |
 | `speed` | `'1'` | Animation speed multiplier, from `0.1` to `5` |
 | `show_labels` | `'true'` | `'true'` or `'false'` |
 | `show_stars` | `'true'` | `'true'` or `'false'` |
@@ -152,11 +155,34 @@ After the run succeeds, download **commitcade-graphs** from its Actions summary.
 
 Output **`output_dir`** is the relative directory containing the files. For `ufo`, the action writes `ufo-contribution-graph.svg` with `github-light` and `ufo-contribution-graph-dark.svg` with `github-dark`. Existing files with these names are replaced; unrelated files are left alone. The action fetches one calendar and uses it for both variants. Use the CLI for Midnight or static SVGs.
 
+## UFO personalities and beam size
+
+| Flight mode | Behavior |
+| --- | --- |
+| `classic` (default) | The original wandering flight, mixing nearby clusters with occasional longer trips |
+| `curious` | Shorter exploratory hops, slower cruising, and occasional beam-off inspection pauses with a look-around tilt |
+| `collector` | Seeks the remaining cluster with the most occupied squares inside the beam; prefers nearby clusters when counts tie |
+
+Set the personality and beam size independently. For example, add these inputs to your profile workflow's Commitcade step:
+
+```yaml
+flight_mode: curious
+beam_size: '2'
+```
+
+`beam_size` accepts numbers from `0.5` to `3`, including fractional values. `1` keeps the original 54-pixel-wide cone; `2` doubles its width to 108 pixels; `3` makes it 162 pixels wide in the SVG's coordinate system. The beam also reaches farther as it grows, with altitude limited to keep the UFO visible. The saucer itself stays the same size.
+
+Only occupied squares whose centers fall inside the cone are collected. A larger beam can capture more days per stop, depending on nearby activity; it does not change contribution counts or invent activity. Each square is collected at most once per loop, and the beam stays open until the whole cluster has lifted. `speed` still adjusts the overall animation speed independently of the personality.
+
+The [manual download workflow](.github/workflows/generate-example.yml) also offers personality and beam-size choices in its Run workflow form. No website is needed.
+
 ## CLI reference
 
 ```sh
 commitcade --username octocat --theme midnight --beam-color '#80ffdb' --speed 1.5 --output generated/octocat.svg
 commitcade --demo --theme github-light --no-stars --no-labels --static --output generated/static.svg
+commitcade --username octocat --flight-mode curious --beam-size 2 --output generated/curious.svg
+commitcade --demo --flight-mode collector --beam-size 3 --output generated/collector.svg
 commitcade --help
 ```
 
@@ -169,6 +195,8 @@ In a source checkout, replace `commitcade` with `node cli/index.js`.
 | `--type TYPE` | `ufo` | Graph type ID |
 | `--theme THEME` | `github-dark` | `github-dark`, `github-light`, or `midnight` |
 | `--beam-color HEX` | `#a3ff12` | Six-digit hex beam color |
+| `--beam-size NUMBER` | `1` | Beam size multiplier, `0.5`–`3` |
+| `--flight-mode MODE` | `classic` | `classic`, `curious`, or `collector` |
 | `--speed NUMBER` | `1` | Animation speed multiplier, `0.1`–`5` |
 | `--output PATH` | `dist/ufo-contribution-graph.svg` | SVG file; parent directories are created |
 | `--no-labels` | Off | Hide calendar labels |
@@ -188,7 +216,7 @@ npm install git+https://github.com/dianbrown/commitcade.git
 
 ```js
 import { writeFile } from 'node:fs/promises';
-import { createDemoCalendar, fetchGitHubCalendar, renderGraph, themes, graphTypes } from 'commitcade';
+import { createDemoCalendar, fetchGitHubCalendar, renderGraph, themes, graphTypes, flightModes } from 'commitcade';
 
 const calendar = createDemoCalendar(42);
 // Or, in Node.js:
@@ -201,6 +229,8 @@ const svg = renderGraph(calendar, {
   type: 'ufo',
   theme: 'github-dark',
   beamColor: '#a3ff12',
+  beamSize: 2,
+  flightMode: 'curious',
   speed: 1,
   showLabels: true,
   showStars: true,
@@ -210,6 +240,7 @@ await writeFile('contributions.svg', svg);
 
 console.log(Object.keys(themes));
 console.log(graphTypes); // [{ id, name, description }]
+console.log(flightModes); // ['classic', 'curious', 'collector']
 ```
 
 The package entry point is `src/core/index.js`. `renderGraph(calendar, options)` synchronously returns an SVG string. `createDemoCalendar(seed = 42)` returns repeatable sample data. `fetchGitHubCalendar(username, { token, signal, fetchImpl } = {})` asynchronously returns a normalized calendar; `fetchImpl` lets tests inject a fetch implementation. The normalized shape is:
