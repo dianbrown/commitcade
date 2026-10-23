@@ -29,7 +29,7 @@ inputs:
     required: false
     default: classic
   beam_size:
-    description: Beam size multiplier from 0.5 to 3; larger cones collect more occupied squares per stop.
+    description: Beam size level from 0.5 to 3; increases vertical reach with modest widening.
     required: false
     default: '1'
   show_labels:

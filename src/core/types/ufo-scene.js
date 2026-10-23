@@ -64,11 +64,12 @@ export function createUfoScene(calendar, options = {}) {
     }
     let target = pool[Math.floor(random() * pool.length)];
     const baseHeight = 44 + random() * 14;
-    // Grow width linearly and reach more gently, keeping the saucer inside the SVG.
+    // Favor a longer cone with only modest widening. The setting is a size level,
+    // not a direct width multiplier; keep the original geometry at level 1.
     const geometryFor = (cell) => {
-      const height = Math.min(baseHeight * Math.sqrt(beamSize), cell.y - 40);
+      const height = Math.min(baseHeight * (1 + 0.25 * (beamSize - 1)), cell.y - 40);
       return { height, beam: { x: cell.x, top: cell.y - height + 6, bottom: cell.y + 7,
-        topHalfWidth: 3, bottomHalfWidth: 27 * beamSize } };
+        topHalfWidth: 3, bottomHalfWidth: 27 * (1 + 0.15 * (beamSize - 1)) } };
     };
     if (flightMode === 'collector') {
       let bestCount = -1;

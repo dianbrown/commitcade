@@ -17,7 +17,7 @@ Options:
   --type TYPE        Graph type: ${graphTypes.map(({ id }) => id).join(', ')} (default: ufo)
   --theme THEME      ${Object.keys(themes).join(', ')} (default: github-dark)
   --beam-color HEX   Six-digit hex color (default: #a3ff12)
-  --beam-size NUMBER Beam size multiplier, 0.5–3 (default: 1)
+  --beam-size NUMBER Beam size level, 0.5–3; mainly adds reach (default: 1)
   --flight-mode MODE classic, curious, or collector (default: classic)
   --speed NUMBER     Animation speed multiplier, 0.1–5 (default: 1)
   --output PATH      SVG file (default: dist/ufo-contribution-graph.svg)

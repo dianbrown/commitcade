@@ -146,7 +146,7 @@ After the run succeeds, download **commitcade-graphs** from its Actions summary.
 | `github_token` | `${{ github.token }}` | Token for GitHub's official GraphQL API; set `''` to use the public third-party API |
 | `types` | `ufo` | Comma-separated graph type IDs; currently only `ufo` |
 | `beam_color` | `'#a3ff12'` | Six-digit hex color; quote it in YAML |
-| `beam_size` | `'1'` | Beam size multiplier, from `0.5` to `3` |
+| `beam_size` | `'1'` | Beam size level, from `0.5` to `3`; mostly increases vertical reach |
 | `flight_mode` | `classic` | `classic`, `curious`, or `collector` |
 | `speed` | `'1'` | Animation speed multiplier, from `0.1` to `5` |
 | `show_labels` | `'true'` | `'true'` or `'false'` |
@@ -170,7 +170,7 @@ flight_mode: curious
 beam_size: '2'
 ```
 
-`beam_size` accepts numbers from `0.5` to `3`, including fractional values. `1` keeps the original 54-pixel-wide cone; `2` doubles its width to 108 pixels; `3` makes it 162 pixels wide in the SVG's coordinate system. The beam also reaches farther as it grows, with altitude limited to keep the UFO visible. The saucer itself stays the same size.
+`beam_size` accepts numbers from `0.5` to `3`, including fractional values. It is a gentle size control, not a direct width multiplier. `1` keeps the original 54-pixel-wide cone. `2` gives roughly 25% more vertical reach and just 15% more width (62.1 pixels); `3` gives roughly 50% more reach and 30% more width (70.2 pixels). Vertical reach is limited near the top of the graph to keep the UFO visible. The saucer itself stays the same size.
 
 Only occupied squares whose centers fall inside the cone are collected. A larger beam can capture more days per stop, depending on nearby activity; it does not change contribution counts or invent activity. Each square is collected at most once per loop, and the beam stays open until the whole cluster has lifted. `speed` still adjusts the overall animation speed independently of the personality.
 
@@ -195,7 +195,7 @@ In a source checkout, replace `commitcade` with `node cli/index.js`.
 | `--type TYPE` | `ufo` | Graph type ID |
 | `--theme THEME` | `github-dark` | `github-dark`, `github-light`, or `midnight` |
 | `--beam-color HEX` | `#a3ff12` | Six-digit hex beam color |
-| `--beam-size NUMBER` | `1` | Beam size multiplier, `0.5`–`3` |
+| `--beam-size NUMBER` | `1` | Beam size level, `0.5`–`3`; mostly increases vertical reach |
 | `--flight-mode MODE` | `classic` | `classic`, `curious`, or `collector` |
 | `--speed NUMBER` | `1` | Animation speed multiplier, `0.1`–`5` |
 | `--output PATH` | `dist/ufo-contribution-graph.svg` | SVG file; parent directories are created |

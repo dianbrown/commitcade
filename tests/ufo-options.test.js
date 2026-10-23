@@ -47,13 +47,17 @@ test('larger beams grow the actual cone, capture more activity, and leave the sa
   for (let i = 1; i < scenes.length; i++) {
     assert.equal(scenes[i].visits[0].date, scenes[0].visits[0].date);
     assert.ok(scenes[i].visits[0].beam.bottomHalfWidth > scenes[i - 1].visits[0].beam.bottomHalfWidth);
-    assert.ok(captured(scenes[i]).length > captured(scenes[i - 1]).length);
     const dates = new Set(scenes[i].visits[0].captures.map(c => c.date));
     for (const cell of scenes[i - 1].visits[0].captures) assert.ok(dates.has(cell.date));
   }
   const normal = renderGraph(input);
   const wide = renderGraph(input, { beamSize: 2 });
-  assert.match(wide, /M -3 6 L -54 [\d.]+ L 54 [\d.]+ L 3 6 Z/);
+  assert.match(wide, /M -3 6 L -31\.05 [\d.]+ L 31\.05 [\d.]+ L 3 6 Z/);
+  const base = scenes[1].visits[0], medium = scenes[2].visits[0], largest = scenes[3].visits[0];
+  assert.ok(Math.abs(medium.height / base.height - 1.25) < 1e-9);
+  assert.ok(Math.abs(medium.beam.bottomHalfWidth / base.beam.bottomHalfWidth - 1.15) < 1e-9);
+  assert.ok(Math.abs(largest.beam.bottomHalfWidth * 2 - 70.2) < 1e-9);
+  assert.ok(captured(scenes[3]).length > captured(scenes[1]).length);
   const hull = svg => svg.slice(svg.indexOf('<g class="flight"><g class="hull">'));
   // The outline geometry, rather than gradients/IDs, is invariant.
   const paths = svg => [...hull(svg).matchAll(/<path d="([^"]+)"/g)].map(m => m[1]);

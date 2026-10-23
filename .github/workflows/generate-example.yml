@@ -15,7 +15,7 @@ on:
           - curious
           - collector
       beam_size:
-        description: Beam size multiplier
+        description: Beam size level (mostly increases vertical reach)
         type: choice
         default: '1'
         options:
