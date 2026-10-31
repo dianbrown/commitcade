@@ -55,6 +55,15 @@ test('CLI demo creates the default SVG offline and is deterministic', async (t) 
   assert.equal(await readFile(output, 'utf8'), svg);
 });
 
+test('Ghost Haunting uses its own default output filename', async (t) => {
+  const cwd = await temporaryDirectory(t);
+  const result = run(['--demo', '--type', 'ghost-haunting'], cwd);
+  assert.equal(result.status, 0, result.stderr);
+  const svg = await readFile(join(cwd, 'dist', 'ghost-haunting-contribution-graph.svg'), 'utf8');
+  assert.equal(svg, renderGraph(createDemoCalendar(), { type: 'ghost-haunting' }));
+  assert.deepEqual(await readdir(join(cwd, 'dist')), ['ghost-haunting-contribution-graph.svg']);
+});
+
 test('CLI forwards rendering options and creates nested output directories', async (t) => {
   const cwd = await temporaryDirectory(t);
   const output = join('folder with spaces', 'nested', 'graph.svg');
@@ -135,7 +144,7 @@ function runAction(cwd, input = {}, preload = noNetwork) {
   });
 }
 
-test('action generates both themes and its output with a mocked public request', async (t) => {
+test('action generates both styles in both themes with one request and deduplicates types', async (t) => {
   const cwd = await temporaryDirectory(t);
   const preload = 'data:text/javascript,' + encodeURIComponent(`
     let requests = 0;
@@ -149,11 +158,14 @@ test('action generates both themes and its output with a mocked public request',
     };
   `);
   // An explicitly empty action input must override an ambient workflow token.
-  const result = runAction(cwd, { INPUT_OUTPUT_DIR: 'assets/graphs', INPUT_TYPES: 'ufo, ufo',
+  const result = runAction(cwd, { INPUT_OUTPUT_DIR: 'assets/graphs', INPUT_TYPES: 'ufo, ghost-haunting, ufo',
     INPUT_BEAM_SIZE: '2', INPUT_FLIGHT_MODE: 'curious',
     INPUT_GITHUB_TOKEN: '', GITHUB_TOKEN: 'ambient-token-must-not-be-used' }, preload);
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual((await readdir(join(cwd, 'assets', 'graphs'))).sort(), ['ufo-contribution-graph-dark.svg', 'ufo-contribution-graph.svg']);
+  assert.deepEqual((await readdir(join(cwd, 'assets', 'graphs'))).sort(), [
+    'ghost-haunting-contribution-graph-dark.svg', 'ghost-haunting-contribution-graph.svg',
+    'ufo-contribution-graph-dark.svg', 'ufo-contribution-graph.svg',
+  ]);
   const light = await readFile(join(cwd, 'assets', 'graphs', 'ufo-contribution-graph.svg'), 'utf8');
   const dark = await readFile(join(cwd, 'assets', 'graphs', 'ufo-contribution-graph-dark.svg'), 'utf8');
   assert.match(light, /<svg\b/);
@@ -165,6 +177,10 @@ test('action generates both themes and its output with a mocked public request',
     weeks: [{ contributionDays: [{ date: '2026-01-04', contributionCount: 3, contributionLevel: 1, weekday: 0 }] }] };
   for (const [svg, theme] of [[light, 'github-light'], [dark, 'github-dark']]) {
     assert.equal(svg, renderGraph(calendar, { theme, beamSize: 2, flightMode: 'curious' }));
+  }
+  for (const [suffix, theme] of [['', 'github-light'], ['-dark', 'github-dark']]) {
+    const svg = await readFile(join(cwd, 'assets', 'graphs', `ghost-haunting-contribution-graph${suffix}.svg`), 'utf8');
+    assert.equal(svg, renderGraph(calendar, { type: 'ghost-haunting', theme, beamSize: 2, flightMode: 'curious' }));
   }
   assert.equal(await readFile(join(cwd, 'github-output'), 'utf8'), 'output_dir=assets/graphs\n');
 });

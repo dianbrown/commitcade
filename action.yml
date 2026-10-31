@@ -13,7 +13,7 @@ inputs:
     required: false
     default: ${{ github.token }}
   types:
-    description: Comma-separated graph types. Currently ufo is supported.
+    description: Comma-separated graph types (ufo, ghost-haunting).
     required: false
     default: ufo
   beam_color:

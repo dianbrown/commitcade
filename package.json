@@ -1,7 +1,7 @@
 {
   "name": "commitcade",
   "version": "0.1.0",
-  "description": "Turn your GitHub contributions into close encounters. Animated SVG graphs, a CLI, and a GitHub Action.",
+  "description": "Animated GitHub contribution graphs: UFO and Ghost Haunting, with a CLI and GitHub Action.",
   "type": "module",
   "license": "MIT",
   "engines": { "node": ">=22.12.0" },
@@ -10,10 +10,11 @@
   "bin": { "commitcade": "cli/index.js" },
   "files": ["src/core", "cli", "README.md", "LICENSE"],
   "repository": { "type": "git", "url": "https://github.com/dianbrown/commitcade.git" },
-  "keywords": ["github", "contributions", "svg", "ufo", "readme", "github-action"],
+  "keywords": ["github", "contributions", "svg", "ufo", "ghost-haunting", "readme", "github-action"],
   "scripts": {
     "test": "node --test",
     "check": "npm test",
-    "demo": "node cli/index.js --demo --output assets/demo.svg"
+    "demo": "node cli/index.js --demo --output assets/demo.svg",
+    "demo:ghost-haunting": "node cli/index.js --demo --type ghost-haunting --theme midnight --output assets/ghost-haunting-demo.svg"
   }
 }

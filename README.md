@@ -2,13 +2,19 @@
 
 # Commitcade
 
-**Your commits. A close encounter.**
+**Your commits. A little more alive.**
 
-Turn a GitHub contribution calendar into an animated UFO scene: a flying saucer, a glowing tractor beam, and a year's worth of tiny green discoveries.
+Turn a GitHub contribution calendar into an animated scene. Let a UFO abduct your contributions or tiny ghosts haunt the squares. Each style reacts to your activity and exports as a self-contained SVG.
 
 [Add to your profile](#add-it-to-your-github-profile) · [Local use](#local-use-optional) · [Customize](#cli-reference) · [Contribute](CONTRIBUTING.md)
 
+### UFO
+
 <img src="assets/demo.svg" alt="A UFO flying above a GitHub contribution calendar with a lime green tractor beam" width="100%">
+
+### Ghost Haunting
+
+<img src="assets/ghost-haunting-demo.svg" alt="Tiny white ghosts emerging from and possessing contribution squares" width="100%">
 
 *Deterministic sample data. Generate your own SVG with a username or try the offline demo.*
 
@@ -16,13 +22,25 @@ Turn a GitHub contribution calendar into an animated UFO scene: a flying saucer,
 
 ## What you get
 
-- **An animated UFO contribution graph** exported as a self-contained SVG.
+- **Two animated contribution graph styles:** UFO and Ghost Haunting, exported as self-contained SVGs.
 - **Three themes:** GitHub Dark, GitHub Light, and Midnight, with a custom beam color, animation speed, labels, and stars.
 - **Three UFO personalities:** Classic, Curious, and Collector, with an adjustable beam size.
 - **A CLI and GitHub Action** for repeatable generation and profile updates.
 - **A JavaScript library** with zero runtime dependencies, deterministic demo data, and a normalized calendar API.
 
-UFO is the implemented graph type. SVG is the implemented export format. Customize it through CLI flags, GitHub Action inputs, or the JavaScript API—no website or server to host. Profile users can use the Action below without installing anything. For local CLI/library use, install directly from this repository; the package is not published to the npm registry.
+UFO and Ghost Haunting are the implemented graph styles. SVG is the implemented export format. Customize them through CLI flags, GitHub Action inputs, or the JavaScript API—no website or server to host. Profile users can use the Action below without installing anything. For local CLI/library use, install directly from this repository; the package is not published to the npm registry.
+
+## Ghost Haunting
+
+Up to five tiny white ghosts emerge from active squares and possess nearby tiles inside the calendar. Each ghost leaves a dimmed source square, enters its destination, and makes that tile shiver, turn pale, and briefly fade. Original contribution colors return after each possession. Ghosts follow separate local chains of up to six active days, with staggered timing. The compact graph has no separate scene above it; empty calendars stay empty.
+
+```sh
+node cli/index.js --demo --type ghost-haunting --theme midnight --output assets/ghost-haunting-demo.svg
+```
+
+Use `type: 'ghost-haunting'` in the JavaScript API or `types: ghost-haunting` in the Action. The Action generates `ghost-haunting-contribution-graph.svg` and `ghost-haunting-contribution-graph-dark.svg`. The profile setup below uses `types: ufo,ghost-haunting` to generate and display both styles.
+
+Ghost Haunting supports all three themes, `speed`, labels, static output, and reduced motion. Static and reduced-motion views hide the ghosts and show the complete unmodified calendar. Stars, beam color, beam size, and flight mode apply only to UFO.
 
 ## Add it to your GitHub profile
 
@@ -60,6 +78,7 @@ jobs:
       - uses: dianbrown/commitcade@main
         with:
           github_user_name: ${{ github.repository_owner }}
+          types: ufo,ghost-haunting
           output_dir: assets/commitcade
 
       - name: Commit changed graphs
@@ -68,12 +87,12 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg
-          if git diff --cached --quiet -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg; then
+          git add -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg assets/commitcade/ghost-haunting-contribution-graph.svg assets/commitcade/ghost-haunting-contribution-graph-dark.svg
+          if git diff --cached --quiet -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg assets/commitcade/ghost-haunting-contribution-graph.svg assets/commitcade/ghost-haunting-contribution-graph-dark.svg; then
             echo 'Contribution graphs are unchanged.'
             exit 0
           fi
-          git commit -m 'Update Commitcade contribution graphs' -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg
+          git commit -m 'Update Commitcade contribution graphs' -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg assets/commitcade/ghost-haunting-contribution-graph.svg assets/commitcade/ghost-haunting-contribution-graph-dark.svg
           git push origin "HEAD:$DEFAULT_BRANCH"
 ```
 
@@ -90,6 +109,12 @@ Paste the following into the `README.md` at the root of the same profile reposit
   <source media="(prefers-color-scheme: dark)" srcset="assets/commitcade/ufo-contribution-graph-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="assets/commitcade/ufo-contribution-graph.svg">
   <img alt="My GitHub contributions explored by a UFO" src="assets/commitcade/ufo-contribution-graph.svg">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/commitcade/ghost-haunting-contribution-graph-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/commitcade/ghost-haunting-contribution-graph.svg">
+  <img alt="Tiny ghosts haunting my GitHub contributions" src="assets/commitcade/ghost-haunting-contribution-graph.svg">
 </picture>
 ```
 
@@ -136,7 +161,7 @@ After the run succeeds, download **commitcade-graphs** from its Actions summary.
 | --- | --- | --- |
 | `github_user_name` | Required | GitHub username to render |
 | `github_token` | `${{ github.token }}` | Token for GitHub's official GraphQL API; set `''` to use the public third-party API |
-| `types` | `ufo` | Comma-separated graph type IDs; currently only `ufo` |
+| `types` | `ufo` | Comma-separated graph type IDs: `ufo`, `ghost-haunting` |
 | `beam_color` | `'#a3ff12'` | Six-digit hex color; quote it in YAML |
 | `beam_size` | `'1'` | Beam size level, from `0.5` to `3`; mostly increases vertical reach |
 | `flight_mode` | `classic` | `classic`, `curious`, or `collector` |
@@ -210,13 +235,13 @@ In a source checkout, replace `commitcade` with `node cli/index.js`.
 | --- | --- | --- |
 | `--username NAME` | — | Fetch a GitHub user's contribution calendar |
 | `--demo` | Off | Use deterministic sample data; cannot be combined with `--username` |
-| `--type TYPE` | `ufo` | Graph type ID |
+| `--type TYPE` | `ufo` | Graph type ID: `ufo` or `ghost-haunting` |
 | `--theme THEME` | `github-dark` | `github-dark`, `github-light`, or `midnight` |
 | `--beam-color HEX` | `#a3ff12` | Six-digit hex beam color |
 | `--beam-size NUMBER` | `1` | Beam size level, `0.5`–`3`; mostly increases vertical reach |
 | `--flight-mode MODE` | `classic` | `classic`, `curious`, or `collector` |
 | `--speed NUMBER` | `1` | Animation speed multiplier, `0.1`–`5` |
-| `--output PATH` | `dist/ufo-contribution-graph.svg` | SVG file; parent directories are created |
+| `--output PATH` | `dist/<type>-contribution-graph.svg` | SVG file; parent directories are created |
 | `--no-labels` | Off | Hide calendar labels |
 | `--no-stars` | Off | Hide background stars |
 | `--static` | Off | Disable animation |

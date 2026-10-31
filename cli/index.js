@@ -20,7 +20,7 @@ Options:
   --beam-size NUMBER Beam size level, 0.5–3; mainly adds reach (default: 1)
   --flight-mode MODE classic, curious, or collector (default: classic)
   --speed NUMBER     Animation speed multiplier, 0.1–5 (default: 1)
-  --output PATH      SVG file (default: dist/ufo-contribution-graph.svg)
+  --output PATH      SVG file (default: dist/<type>-contribution-graph.svg)
   --no-labels        Hide calendar labels
   --no-stars         Hide background stars
   --static           Disable animation
@@ -44,7 +44,7 @@ async function main() {
       'beam-size': { type: 'string' },
       'flight-mode': { type: 'string' },
       speed: { type: 'string' },
-      output: { type: 'string', default: 'dist/ufo-contribution-graph.svg' },
+      output: { type: 'string' },
       'no-labels': { type: 'boolean', default: false },
       'no-stars': { type: 'boolean', default: false },
       static: { type: 'boolean', default: false },
@@ -57,6 +57,7 @@ async function main() {
   }
   if (values.demo && values.username !== undefined) throw new Error('Use either --username or --demo, not both.');
   if (!values.demo) validateUsername(values.username);
+  values.output ??= `dist/${values.type ?? 'ufo'}-contribution-graph.svg`;
   if (!values.output.trim()) throw new Error('--output must be a non-empty file path.');
   if (!/\.svg$/i.test(values.output)) throw new Error('--output must end in .svg; SVG is the supported output format.');
   const options = validateOptions({

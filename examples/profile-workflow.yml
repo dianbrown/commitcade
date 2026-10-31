@@ -23,6 +23,7 @@ jobs:
       - uses: dianbrown/commitcade@main
         with:
           github_user_name: ${{ github.repository_owner }}
+          types: ufo,ghost-haunting
           output_dir: assets/commitcade
 
       - name: Commit changed graphs
@@ -31,10 +32,10 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg
-          if git diff --cached --quiet -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg; then
+          git add -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg assets/commitcade/ghost-haunting-contribution-graph.svg assets/commitcade/ghost-haunting-contribution-graph-dark.svg
+          if git diff --cached --quiet -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg assets/commitcade/ghost-haunting-contribution-graph.svg assets/commitcade/ghost-haunting-contribution-graph-dark.svg; then
             echo 'Contribution graphs are unchanged.'
             exit 0
           fi
-          git commit -m 'Update Commitcade contribution graphs' -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg
+          git commit -m 'Update Commitcade contribution graphs' -- assets/commitcade/ufo-contribution-graph.svg assets/commitcade/ufo-contribution-graph-dark.svg assets/commitcade/ghost-haunting-contribution-graph.svg assets/commitcade/ghost-haunting-contribution-graph-dark.svg
           git push origin "HEAD:$DEFAULT_BRANCH"
