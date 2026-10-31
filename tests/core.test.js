@@ -113,7 +113,7 @@ test('options reject CSS injection, prototype names, and invalid types', () => {
 
 test('themes and graph metadata are frozen, complete, and registry-backed', () => {
   assert.deepEqual(Object.keys(themes), ['github-dark', 'github-light', 'midnight']);
-  assert.deepEqual(graphTypes.map(({ id }) => id), ['ufo', 'ghost-haunting']);
+  assert.deepEqual(graphTypes.map(({ id }) => id), ['ufo', 'ghost-haunting', 'mimic']);
   assert.ok(graphTypes.every(({ name, description }) => name && description));
   assert.ok(Object.isFrozen(themes) && Object.isFrozen(graphTypes));
   for (const [name, theme] of Object.entries(themes)) {

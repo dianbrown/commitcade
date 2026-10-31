@@ -22,6 +22,7 @@ on:
           - ufo,ghost-haunting
           - ufo
           - ghost-haunting
+          - mimic
       beam_size:
         description: Beam size level (mostly increases vertical reach)
         type: choice

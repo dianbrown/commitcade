@@ -16,19 +16,23 @@ Turn a GitHub contribution calendar into an animated scene. Let a UFO abduct you
 
 <img src="assets/ghost-haunting-demo.svg" alt="Tiny white ghosts emerging from and possessing contribution squares" width="100%">
 
+### The Mimic
+
+<img src="assets/mimic-demo.svg" alt="Contribution squares waking up, eating nearby tiles, and sneezing them back into place" width="100%">
+
 *Deterministic sample data. Generate your own SVG with a username or try the offline demo.*
 
 </div>
 
 ## What you get
 
-- **Two animated contribution graph styles:** UFO and Ghost Haunting, exported as self-contained SVGs.
+- **Three animated contribution graph styles:** UFO, Ghost Haunting, and The Mimic, exported as self-contained SVGs.
 - **Three themes:** GitHub Dark, GitHub Light, and Midnight, with a custom beam color, animation speed, labels, and stars.
 - **Three UFO personalities:** Classic, Curious, and Collector, with an adjustable beam size.
 - **A CLI and GitHub Action** for repeatable generation and profile updates.
 - **A JavaScript library** with zero runtime dependencies, deterministic demo data, and a normalized calendar API.
 
-UFO and Ghost Haunting are the implemented graph styles. SVG is the implemented export format. Customize them through CLI flags, GitHub Action inputs, or the JavaScript API—no website or server to host. Profile users can use the Action below without installing anything. For local CLI/library use, install directly from this repository; the package is not published to the npm registry.
+UFO, Ghost Haunting, and The Mimic are the implemented graph styles. SVG is the implemented export format. Customize them through CLI flags, GitHub Action inputs, or the JavaScript API—no website or server to host. Profile users can use the Action below without installing anything. For local CLI/library use, install directly from this repository; the package is not published to the npm registry.
 
 ## Ghost Haunting
 
@@ -41,6 +45,16 @@ node cli/index.js --demo --type ghost-haunting --theme midnight --output assets/
 Use `type: 'ghost-haunting'` in the JavaScript API or `types: ghost-haunting` in the Action. The Action generates `ghost-haunting-contribution-graph.svg` and `ghost-haunting-contribution-graph-dark.svg`. The profile setup below uses `types: ufo,ghost-haunting` to generate and display both styles.
 
 Ghost Haunting supports all three themes, `speed`, labels, static output, and reduced motion. Static and reduced-motion views hide the ghosts and show the complete unmodified calendar. Stars, beam color, beam size, and flight mode apply only to UFO.
+
+## The Mimic
+
+Up to three active squares open an eye, sprout little legs, and sneak toward nearby contributions. Each swallows up to three real tiles, growing after each bite until its body spans roughly a 2×2 block of squares. A sneeze sends the stolen squares flying back to their original positions; the mimic returns home and disguises itself. Empty calendars stay empty, and isolated mimics wake up without inventing food.
+
+```sh
+node cli/index.js --demo --type mimic --theme midnight --output assets/mimic-demo.svg
+```
+
+Use `type: 'mimic'` in the JavaScript API or `types: mimic` in the Action. Outputs are `mimic-contribution-graph.svg` and `mimic-contribution-graph-dark.svg`. To add it to the profile setup below, set `types: ufo,ghost-haunting,mimic`, add both Mimic files to the workflow's `git add`, diff, and commit paths, and add a matching README image. All three themes, speed, labels, static export, and reduced motion are supported. Static and reduced-motion views show the original calendar. UFO-specific options and stars do not affect this style.
 
 ## Add it to your GitHub profile
 
@@ -161,7 +175,7 @@ After the run succeeds, download **commitcade-graphs** from its Actions summary.
 | --- | --- | --- |
 | `github_user_name` | Required | GitHub username to render |
 | `github_token` | `${{ github.token }}` | Token for GitHub's official GraphQL API; set `''` to use the public third-party API |
-| `types` | `ufo` | Comma-separated graph type IDs: `ufo`, `ghost-haunting` |
+| `types` | `ufo` | Comma-separated graph type IDs: `ufo`, `ghost-haunting`, `mimic` |
 | `beam_color` | `'#a3ff12'` | Six-digit hex color; quote it in YAML |
 | `beam_size` | `'1'` | Beam size level, from `0.5` to `3`; mostly increases vertical reach |
 | `flight_mode` | `classic` | `classic`, `curious`, or `collector` |
@@ -235,7 +249,7 @@ In a source checkout, replace `commitcade` with `node cli/index.js`.
 | --- | --- | --- |
 | `--username NAME` | — | Fetch a GitHub user's contribution calendar |
 | `--demo` | Off | Use deterministic sample data; cannot be combined with `--username` |
-| `--type TYPE` | `ufo` | Graph type ID: `ufo` or `ghost-haunting` |
+| `--type TYPE` | `ufo` | Graph type ID: `ufo`, `ghost-haunting`, or `mimic` |
 | `--theme THEME` | `github-dark` | `github-dark`, `github-light`, or `midnight` |
 | `--beam-color HEX` | `#a3ff12` | Six-digit hex beam color |
 | `--beam-size NUMBER` | `1` | Beam size level, `0.5`–`3`; mostly increases vertical reach |

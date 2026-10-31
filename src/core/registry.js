@@ -1,5 +1,6 @@
 import { renderUfo } from './types/ufo.js';
 import { renderGhostHaunting } from './types/ghost-haunting.js';
+import { renderMimic } from './types/mimic.js';
 
 export const typeRegistry = Object.freeze({
   ufo: Object.freeze({
@@ -11,6 +12,11 @@ export const typeRegistry = Object.freeze({
     id: 'ghost-haunting', name: 'Ghost Haunting',
     description: 'Tiny white ghosts emerge from contribution squares and possess nearby active tiles.',
     render: renderGhostHaunting,
+  }),
+  mimic: Object.freeze({
+    id: 'mimic', name: 'The Mimic',
+    description: 'Disguised contribution squares wake up, swallow nearby tiles, then sneeze them back into place.',
+    render: renderMimic,
   }),
 });
 
