@@ -1,7 +1,7 @@
 {
   "name": "commitcade",
   "version": "0.1.0",
-  "description": "Animated GitHub contribution graphs: UFO, Ghost Haunting, and The Mimic, with a CLI and GitHub Action.",
+  "description": "Animated GitHub contribution graphs: UFO, Ghost Haunting, The Mimic, Ant Heist, and Overgrown, with a CLI and GitHub Action.",
   "type": "module",
   "license": "MIT",
   "engines": { "node": ">=22.12.0" },
@@ -16,6 +16,8 @@
     "check": "npm test",
     "demo": "node cli/index.js --demo --output assets/demo.svg",
     "demo:ghost-haunting": "node cli/index.js --demo --type ghost-haunting --theme midnight --output assets/ghost-haunting-demo.svg",
-    "demo:mimic": "node cli/index.js --demo --type mimic --theme midnight --output assets/mimic-demo.svg"
+    "demo:mimic": "node cli/index.js --demo --type mimic --theme midnight --output assets/mimic-demo.svg",
+    "demo:ant-heist": "node cli/index.js --demo --type ant-heist --theme midnight --output assets/ant-heist-demo.svg",
+    "demo:overgrown": "node cli/index.js --demo --type overgrown --theme midnight --output assets/overgrown-demo.svg"
   }
 }

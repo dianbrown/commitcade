@@ -13,7 +13,7 @@ inputs:
     required: false
     default: ${{ github.token }}
   types:
-    description: Comma-separated graph types (ufo, ghost-haunting, mimic).
+    description: Comma-separated graph types (ufo, ghost-haunting, mimic, ant-heist, overgrown).
     required: false
     default: ufo
   beam_color:

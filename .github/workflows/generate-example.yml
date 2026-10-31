@@ -23,6 +23,8 @@ on:
           - ufo
           - ghost-haunting
           - mimic
+          - ant-heist
+          - overgrown
       beam_size:
         description: Beam size level (mostly increases vertical reach)
         type: choice

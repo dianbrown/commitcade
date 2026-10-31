@@ -158,13 +158,15 @@ test('action generates all styles in both themes with one request and deduplicat
     };
   `);
   // An explicitly empty action input must override an ambient workflow token.
-  const result = runAction(cwd, { INPUT_OUTPUT_DIR: 'assets/graphs', INPUT_TYPES: 'ufo, ghost-haunting, mimic, ufo',
+  const result = runAction(cwd, { INPUT_OUTPUT_DIR: 'assets/graphs', INPUT_TYPES: 'ufo, ghost-haunting, mimic, ant-heist, overgrown, ufo',
     INPUT_BEAM_SIZE: '2', INPUT_FLIGHT_MODE: 'curious',
     INPUT_GITHUB_TOKEN: '', GITHUB_TOKEN: 'ambient-token-must-not-be-used' }, preload);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual((await readdir(join(cwd, 'assets', 'graphs'))).sort(), [
+    'ant-heist-contribution-graph-dark.svg', 'ant-heist-contribution-graph.svg',
     'ghost-haunting-contribution-graph-dark.svg', 'ghost-haunting-contribution-graph.svg',
     'mimic-contribution-graph-dark.svg', 'mimic-contribution-graph.svg',
+    'overgrown-contribution-graph-dark.svg', 'overgrown-contribution-graph.svg',
     'ufo-contribution-graph-dark.svg', 'ufo-contribution-graph.svg',
   ]);
   const light = await readFile(join(cwd, 'assets', 'graphs', 'ufo-contribution-graph.svg'), 'utf8');
@@ -179,7 +181,7 @@ test('action generates all styles in both themes with one request and deduplicat
   for (const [svg, theme] of [[light, 'github-light'], [dark, 'github-dark']]) {
     assert.equal(svg, renderGraph(calendar, { theme, beamSize: 2, flightMode: 'curious' }));
   }
-  for (const type of ['ghost-haunting', 'mimic']) for (const [suffix, theme] of [['', 'github-light'], ['-dark', 'github-dark']]) {
+  for (const type of ['ghost-haunting', 'mimic', 'ant-heist', 'overgrown']) for (const [suffix, theme] of [['', 'github-light'], ['-dark', 'github-dark']]) {
     const svg = await readFile(join(cwd, 'assets', 'graphs', `${type}-contribution-graph${suffix}.svg`), 'utf8');
     assert.equal(svg, renderGraph(calendar, { type, theme, beamSize: 2, flightMode: 'curious' }));
   }
